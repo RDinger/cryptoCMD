@@ -89,9 +89,10 @@ class CmcScraper(object):
         else:
             return self.headers, self.rows
 
-    def get_dataframe(self, **kwargs):
+    def get_dataframe(self, Date_as_index=False,**kwargs): # added additional arg here: Date_as_index=False
         """
         This gives scraped data as DataFrame.
+        Date_as_index=True leads to date column being converted to index. Date column will then be removed.
         :param kwargs: Optional arguments that data downloader takes.
         :return: DataFrame of the downloaded data.
         """
@@ -111,7 +112,19 @@ class CmcScraper(object):
         dataframe = pd.DataFrame(data=self.rows, columns=self.headers)
 
         # convert 'Date' column to datetime type
-        dataframe['Date'] = pd.to_datetime(dataframe['Date'])
+        # 2018-03-17: Commented out line below. More elaborate version is in line 119
+        #dataframe['Date'] = pd.to_datetime(dataframe['Date'])
+        
+        # 2018-3-17: additional suggested changes for the dataframe, regarding index and date formatting
+        # I noticed that the date was not chronologeous in the original code, with days taken for months
+        dataframe['Date']=pd.to_datetime(dataframe['Date'], errors='raise', format="%d-%m-%Y",dayfirst=True) # the added args fix that
+        # 2018-03-17 also added if else statement for additional arg Date_as_index
+        if Date_as_index==True:
+            dataframe=dataframe.set_index(dataframe['Date'])
+            dataframe=dataframe.drop('Date',1)
+        else:
+            pass
+        
         return dataframe
 
     def export_csv(self, csv_name=None, csv_path=None, **kwargs):
